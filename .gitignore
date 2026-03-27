@@ -1,0 +1,24 @@
+## .NET / Visual Studio
+bin/
+obj/
+Build/
+*.user
+*.suo
+*.vs/
+.vs/
+*.DotSettings.user
+
+## Build outputs
+*.exe
+*.dll
+*.pdb
+*.cache
+*.log
+
+## NuGet
+packages/
+
+## OS
+Thumbs.db
+desktop.ini
+.DS_Store
