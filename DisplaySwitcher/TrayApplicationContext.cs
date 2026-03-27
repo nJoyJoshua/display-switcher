@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -52,6 +53,8 @@ namespace DisplaySwitcher
             _menu.ForeColor = Color.White;
             _menu.Font = new Font("Segoe UI", 10f);
             _menu.Renderer = new DarkMenuRenderer();
+            _menu.ShowImageMargin = false;
+            _menu.Padding = new Padding(2, 6, 2, 6);
 
             // Header (non-clickable)
             var header = new ToolStripLabel("  🖥  DisplaySwitcher")
@@ -113,7 +116,8 @@ namespace DisplaySwitcher
                 foreach (var p in _settings.Profiles)
                 {
                     var prof = p;
-                    var editItem = new ToolStripMenuItem($"✏  {prof.Name} bearbeiten");
+                    var editItem = new ToolStripMenuItem($"✏  {prof.Name} bearbeiten")
+                    { ForeColor = Color.White };
                     editItem.Click += (s, e) => EditProfile(prof);
                     configMenu.DropDownItems.Add(editItem);
                 }
@@ -121,24 +125,29 @@ namespace DisplaySwitcher
             }
 
             // Add new profile
-            var addItem = new ToolStripMenuItem("➕  Neues Profil erstellen");
+            var addItem = new ToolStripMenuItem("➕  Neues Profil erstellen")
+            { ForeColor = Color.White };
             addItem.Click += (s, e) => CreateNewProfile();
             configMenu.DropDownItems.Add(addItem);
 
             // Remove profile
             if (_settings.Profiles.Count > 0)
             {
-                var removeMenu = new ToolStripMenuItem("🗑  Profil entfernen");
+                var removeMenu = new ToolStripMenuItem("🗑  Profil entfernen")
+                { ForeColor = Color.White };
                 foreach (var p in _settings.Profiles)
                 {
                     var prof = p;
-                    var ri = new ToolStripMenuItem(prof.Name);
+                    var ri = new ToolStripMenuItem(prof.Name)
+                    { ForeColor = Color.White };
                     ri.Click += (s, e) => RemoveProfile(prof);
                     removeMenu.DropDownItems.Add(ri);
                 }
+                ApplyDarkDropDown(removeMenu);
                 configMenu.DropDownItems.Add(removeMenu);
             }
 
+            ApplyDarkDropDown(configMenu);
             _menu.Items.Add(configMenu);
             _menu.Items.Add(new ToolStripSeparator());
 
@@ -164,8 +173,11 @@ namespace DisplaySwitcher
             exitItem.Click += (s, e) => ExitApp();
             _menu.Items.Add(exitItem);
 
-            // Show at tray position
-            _menu.Show(Cursor.Position);
+            // Show at tray position using proper Win32 focus management
+            _trayIcon.ContextMenuStrip = _menu;
+            var method = typeof(NotifyIcon).GetMethod("ShowContextMenu",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            method?.Invoke(_trayIcon, null);
         }
 
         private void ApplyProfile(int profileIndex)
@@ -281,6 +293,18 @@ namespace DisplaySwitcher
             }
         }
 
+        /// <summary>Apply dark theme to a submenu's DropDown.</summary>
+        private void ApplyDarkDropDown(ToolStripMenuItem item)
+        {
+            item.DropDown.BackColor = Color.FromArgb(30, 30, 35);
+            item.DropDown.ForeColor = Color.White;
+            if (item.DropDown is ToolStripDropDownMenu ddm)
+            {
+                ddm.Renderer = new DarkMenuRenderer();
+                ddm.ShowImageMargin = false;
+            }
+        }
+
         private void ExitApp()
         {
             _trayIcon.Visible = false;
@@ -339,18 +363,43 @@ namespace DisplaySwitcher
 
         protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
         {
-            var rect = new Rectangle(0, 0, e.Item.Width, e.Item.Height);
-            using var brush = new SolidBrush(
-                e.Item.Selected && e.Item.Enabled
-                    ? Color.FromArgb(0, 90, 160)
-                    : Color.FromArgb(30, 30, 35));
-            e.Graphics.FillRectangle(brush, rect);
+            var rect = new Rectangle(4, 1, e.Item.Width - 8, e.Item.Height - 2);
+            if (e.Item.Selected && e.Item.Enabled)
+            {
+                using var path = RoundedRect(rect, 4);
+                using var brush = new SolidBrush(Color.FromArgb(0, 90, 160));
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                e.Graphics.FillPath(brush, path);
+            }
+            else
+            {
+                using var brush = new SolidBrush(Color.FromArgb(30, 30, 35));
+                e.Graphics.FillRectangle(brush, new Rectangle(0, 0, e.Item.Width, e.Item.Height));
+            }
         }
 
         protected override void OnRenderImageMargin(ToolStripRenderEventArgs e)
         {
             using var brush = new SolidBrush(Color.FromArgb(30, 30, 35));
             e.Graphics.FillRectangle(brush, e.AffectedBounds);
+        }
+
+        protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
+        {
+            // Draw a subtle rounded border around the menu
+            var rect = new Rectangle(0, 0, e.AffectedBounds.Width - 1, e.AffectedBounds.Height - 1);
+            using var pen = new Pen(Color.FromArgb(60, 60, 75));
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using var path = RoundedRect(rect, 6);
+            e.Graphics.DrawPath(pen, path);
+        }
+
+        protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
+        {
+            e.TextColor = e.Item.ForeColor == SystemColors.ControlText
+                ? Color.White
+                : e.Item.ForeColor;
+            base.OnRenderItemText(e);
         }
 
         protected override void OnRenderArrow(ToolStripArrowRenderEventArgs e)
@@ -362,14 +411,26 @@ namespace DisplaySwitcher
         protected override void OnRenderSeparator(ToolStripSeparatorRenderEventArgs e)
         {
             int y = e.Item.Height / 2;
-            using var pen = new Pen(Color.FromArgb(60, 60, 75));
-            e.Graphics.DrawLine(pen, 8, y, e.Item.Width - 8, y);
+            using var pen = new Pen(Color.FromArgb(55, 55, 68));
+            e.Graphics.DrawLine(pen, 12, y, e.Item.Width - 12, y);
+        }
+
+        private static GraphicsPath RoundedRect(Rectangle bounds, int radius)
+        {
+            int d = radius * 2;
+            var path = new GraphicsPath();
+            path.AddArc(bounds.X, bounds.Y, d, d, 180, 90);
+            path.AddArc(bounds.Right - d, bounds.Y, d, d, 270, 90);
+            path.AddArc(bounds.Right - d, bounds.Bottom - d, d, d, 0, 90);
+            path.AddArc(bounds.X, bounds.Bottom - d, d, d, 90, 90);
+            path.CloseFigure();
+            return path;
         }
     }
 
     public class DarkColorTable : ProfessionalColorTable
     {
-        public override Color MenuBorder => Color.FromArgb(70, 70, 85);
+        public override Color MenuBorder => Color.FromArgb(60, 60, 75);
         public override Color MenuItemBorder => Color.Transparent;
         public override Color ToolStripDropDownBackground => Color.FromArgb(30, 30, 35);
         public override Color ImageMarginGradientBegin => Color.FromArgb(30, 30, 35);
