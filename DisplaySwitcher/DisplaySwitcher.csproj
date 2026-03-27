@@ -16,7 +16,7 @@
     <PublishSingleFile>true</PublishSingleFile>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-    <Version>1.0.0</Version>
+    <Version>0.0.1</Version>
     <Company>DisplaySwitcher</Company>
     <Product>DisplaySwitcher</Product>
     <Description>System Tray Monitor Profile Switcher</Description>
