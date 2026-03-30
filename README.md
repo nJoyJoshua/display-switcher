@@ -1,101 +1,59 @@
 # DisplaySwitcher 🖥
 
-A lightweight Windows system tray tool for switching between monitor profiles and audio devices with a single click.
-
-**Ein System-Tray-Tool zum schnellen Wechseln zwischen Monitor-Profilen + Audio-Ausgabe.**
-
-## Features
-
-- ✅ System Tray Icon (unten rechts in der Taskleiste)
-- ✅ Rechtsklick → Profil direkt wechseln
-- ✅ Beliebig viele Profile konfigurierbar
-- ✅ Monitor ein-/ausschalten per Windows `SetDisplayConfig` API
-- ✅ Audio-Ausgabe- und Eingabegerät automatisch mitschalten
-- ✅ Auflösung, Position & Bildwiederholrate pro Profil gespeichert
-- ✅ Autostart mit Windows (optional)
-- ✅ Einzel-`.exe`, kein Install nötig
-- ✅ Dunkles Kontextmenü-Design
+Du hast mehrere Monitore und wechselst regelmäßig zwischen verschiedenen Setups? Zum Beispiel tagsüber drei Bildschirme am Schreibtisch, abends nur der Fernseher fürs Heimkino? DisplaySwitcher speichert solche Setups als Profile und lässt dich mit zwei Klicks zwischen ihnen wechseln. Neben den Bildschirmen können auch Audiogeräte automatisch mitgewechselt werden.
 
 ---
 
-## Voraussetzungen
+## Download
 
-- Windows 10 / 11 (64-bit)
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (nur zum Kompilieren; die fertige `.exe` ist self-contained)
+➡️ **[Hier klicken um DisplaySwitcher herunterzuladen](../../releases/latest)**
 
----
+Einfach die `DisplaySwitcher.exe` herunterladen und starten. Fertig.  
+Keine Installation, kein Einrichten, nichts weiter nötig.
 
-## Kompilieren & Starten
-
-### Option A – Batch-Skript (empfohlen)
-```
-build.bat
-```
-Die fertige `DisplaySwitcher.exe` liegt danach im Ordner `Build\`.
-
-### Option B – Manuell
-```cmd
-cd DisplaySwitcher
-dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true -o ..\Build
-```
+Voraussetzung: Windows 10 oder Windows 11 (64-bit)
 
 ---
 
-## Erste Schritte
+## Was kann DisplaySwitcher?
 
-1. `DisplaySwitcher.exe` starten → Icon erscheint in der Taskleiste
-2. **Rechtsklick** auf das Icon → „Profile konfigurieren" → „Neues Profil erstellen"
-3. Profil benennen (z. B. „Arbeitsplatz 3 Screens" oder „Heimkino")
-4. Monitore auswählen, die in diesem Profil **aktiv** sein sollen
-5. Optional: Audio-Ausgabe- und Eingabegerät für dieses Profil wählen
-6. Speichern → wiederhole für weitere Profile
+- **Monitor-Profile speichern** – du legst einmalig fest, welche Monitore in welchem Setup aktiv sein sollen
+- **Per Rechtsklick wechseln** – Rechtsklick auf das Symbol in der Taskleiste, Profil auswählen, fertig
+- **Beliebig viele Profile** – z. B. „Büro", „Heimkino", „Präsentation"
+- **Auflösung & Anordnung** werden je Profil gespeichert und automatisch wiederhergestellt
+- **Audiogerät automatisch mitschalten** – z. B. beim Heimkino-Profil auf Lautsprecher wechseln, beim Büro-Profil auf Headset
+- **Automatisch mit Windows starten** (optional)
 
-### Meine Monitore identifizieren
-- Windows-Taste → Einstellungen → System → Anzeige → **Identifizieren**
-- Windows zeigt kurz die Nummer auf jedem Monitor an
-- Im Tool siehst du den Gerätenamen + `[\\.\DISPLAY1]` usw.
+## Was kann DisplaySwitcher **nicht**?
 
----
-
-## Tipp: Als Administrator ausführen
-
-Falls Monitore nicht erkannt werden oder das Umschalten fehlschlägt:
-→ Rechtsklick auf `DisplaySwitcher.exe` → „Als Administrator ausführen"
-
-Oder dauerhaft: Rechtsklick → Eigenschaften → Kompatibilität → „Als Administrator ausführen"
+- ❌ Kein Wechsel per Tastenkürzel (soll zukünftig hinzugefügt werden)
+- ❌ Nur für Windows – kein Mac, kein Linux
 
 ---
 
-## Einstellungen
+## So richtest du es ein
 
-Die Konfiguration wird gespeichert unter:
-```
-%AppData%\DisplaySwitcher\settings.json
-```
-(Im Tray-Menü: „Einstellungsordner öffnen")
+1. `DisplaySwitcher.exe` starten – unten rechts in der Taskleiste erscheint ein kleines Symbol
+2. **Rechtsklick** auf das Symbol → „Profile konfigurieren" → „Neues Profil erstellen"
+3. Dem Profil einen Namen geben (z. B. „Heimkino" oder „3 Bildschirme")
+4. Auswählen, welche Monitore in diesem Profil aktiv sein sollen
+5. Optional: Lautsprecher und Mikrofon für dieses Profil auswählen
+6. Auf „Speichern" klicken – fertig
 
-Ein Debug-Log wird ebenfalls dort gespeichert: `display_log.txt`
+Wiederhole das für jedes Setup das du nutzt. Danach reicht ein Rechtsklick auf das Symbol, um zu wechseln.
+Da aktuell noch keine möglichkeit besteht Bildschirme zu verschieben, bietet es sich an die Bildschirme über Windows so anzuornen wie man es braucht und im Anschluss über DisplaySwitcher als Profil zu speichern.
 
----
-
-## Problemlösung
-
-| Problem | Lösung |
-|---|---|
-| Monitore werden nicht erkannt | Als Administrator ausführen |
-| Monitor schaltet sich nicht um | Treiber aktuell? Anderer Port? DisplayPort/HDMI aktiv? |
-| Audio ändert sich nicht | Gerät in Windows-Sounds als aktiv markiert? |
-| Icon erscheint nicht | Taskleiste → Ausgeblendete Symbole anzeigen (Pfeil ∧) |
-| App startet nicht doppelt | Single-Instance-Schutz ist eingebaut |
+> **Welcher Monitor ist welcher?**  
+> Windows-Taste → Einstellungen → System → Anzeige → **Identifizieren** drücken.  
+> Windows zeigt kurz eine Zahl auf jedem Bildschirm an – dieselben Nummern siehst du auch in DisplaySwitcher.
 
 ---
 
-## Technologie
+### Falls ein Monitor nicht erkannt wird
 
-- C# / .NET 8 / Windows Forms
-- Windows `QueryDisplayConfig` / `SetDisplayConfig` API (P/Invoke)
-- Windows Core Audio `IPolicyConfig` COM Interface
-- Self-contained Single-File Publish (keine .NET-Installation auf dem Zielrechner nötig)
+Rechtsklick auf `DisplaySwitcher.exe` → „Als Administrator ausführen".  
+Wenn das hilft und du das nicht jedes Mal machen willst:  
+Rechtsklick → Eigenschaften → Kompatibilität → Häkchen bei „Programm als Administrator ausführen".
 
 ---
 
